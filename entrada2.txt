@@ -1,0 +1,4 @@
+1 ./procs/teste2 0 2
+2 ./procs/teste5 0 0
+3 ./procs/teste10 4 1
+4 ./procs/teste2 10 3

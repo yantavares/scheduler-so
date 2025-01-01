@@ -51,6 +51,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
     signal(SIGCONT, SIG_IGN);
 
     time_t start_time_global = time(NULL);
+    time_t current_time = start_time_global;
 
     // Lendo o arquivo de entrada
     FILE *file = fopen(input_file, "r");
@@ -82,8 +83,8 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
 
     while (running)
     {
-        running = 0;                 // Assume que todos os processos terminaram
-        int next_start_time = 10000; // Próximo tempo de início dos processos
+        running = 0;                      // Assume que todos os processos terminaram
+        time_t current_time = time(NULL); // Atualiza o tempo atual
 
         for (int priority = 0; priority < MAX_PRIORITY; priority++)
         {
@@ -93,18 +94,16 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
             {
                 Process *process = &queue->processes[i];
 
-                if (process->status != FINISHED)
+                if (process->status == FINISHED)
                 {
-                    running = 1;
+                    continue;
                 }
 
-                // Gerenciar tempo de início
-                if (process->start_time > 0)
+                running = 1;
+
+                // Verifica se o processo já está elegível com base no tempo global
+                if (process->start_time > (int)(current_time - start_time_global))
                 {
-                    if (process->start_time < next_start_time)
-                    {
-                        next_start_time = process->start_time;
-                    }
                     continue;
                 }
 
@@ -150,7 +149,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                         process->end_time = time(NULL);                                                     // Registra o término da execução
                         process->execution_time = (int)(process->end_time - process->start_execution_time); // Calcula o tempo total de execução
                         sem_post(&scheduler->available_cores);                                              // Libera o núcleo
-                        printf("Semáforo liberado para Processo %d\n", process->id);
+                        printf("Semáforo liberado pelo Processo %d\n", process->id);
                     }
                     else if (result == 0)
                     {
@@ -162,25 +161,6 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                         perror("Erro no waitpid");
                         process->status = FINISHED;            // Marca como finalizado em caso de erro
                         sem_post(&scheduler->available_cores); // Libera o núcleo
-                    }
-                }
-            }
-        }
-
-        if (running && next_start_time > 0 && next_start_time != 10000)
-        {
-            printf("Aguardando %d segundos para o próximo processo.\n", next_start_time);
-            sleep(next_start_time);
-
-            // Atualiza os tempos de início
-            for (int priority = 0; priority < MAX_PRIORITY; priority++)
-            {
-                PriorityQueue *queue = &scheduler->queues[priority];
-                for (int i = 0; i < queue->count; i++)
-                {
-                    if (queue->processes[i].start_time > 0)
-                    {
-                        queue->processes[i].start_time -= next_start_time;
                     }
                 }
             }
