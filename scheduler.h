@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <time.h>
+#include <semaphore.h>
 
 #define MAX_PROCESSES 100
 #define MAX_PRIORITY 4
@@ -21,17 +22,20 @@ typedef enum
     FINISHED
 } ProcessStatus;
 
-typedef struct
+typedef struct Process
 {
     int id;
     char executable[256];
-    int start_time;
+    int start_time;          // Tempo de início relativo
+    int start_time_original; // Tempo original de início
     int priority;
+    int execution_time; // Tempo total de execução
     pid_t pid;
     int pipe_fd[2];
     ProcessStatus status;
-    time_t start_time_original; // Tempo de início original
-    time_t end_time;            // Tempo de término
+    time_t start_execution_time; // Tempo em que a execução começou
+    time_t last_resume_time;     // Último tempo em que o processo foi retomado
+    time_t end_time;             // Tempo em que o processo terminou
 } Process;
 
 typedef struct
@@ -44,10 +48,10 @@ typedef struct
 {
     PriorityQueue queues[MAX_PRIORITY];
     int quantum;
+    sem_t available_cores;
 } Scheduler;
 
-// Funções do escalonador
-void init_scheduler(Scheduler *scheduler, int quantum);
+void init_scheduler(Scheduler *scheduler, int quantum, int num_cores);
 void add_process(Scheduler *scheduler, Process *process);
 void execute_scheduler(Scheduler *scheduler, const char *input_file);
 void execute_process(Process *process);

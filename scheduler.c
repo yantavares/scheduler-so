@@ -1,13 +1,14 @@
 #include "scheduler.h"
 
 // Inicializa o escalonador
-void init_scheduler(Scheduler *scheduler, int quantum)
+void init_scheduler(Scheduler *scheduler, int quantum, int num_cores)
 {
     scheduler->quantum = quantum;
     for (int i = 0; i < MAX_PRIORITY; i++)
     {
         scheduler->queues[i].count = 0;
     }
+    sem_init(&scheduler->available_cores, 0, num_cores); // Inicializa semáforo para cores
 }
 
 // Adiciona um processo à fila de prioridade correspondente
@@ -40,7 +41,8 @@ void execute_process(Process *process)
     }
 
     // Código do processo pai
-    close(process->pipe_fd[1]); // Fecha a escrita no pai
+    close(process->pipe_fd[1]);                 // Fecha a escrita no pai
+    process->start_execution_time = time(NULL); // Registra o início da execução
 }
 
 void execute_scheduler(Scheduler *scheduler, const char *input_file)
@@ -48,7 +50,6 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
     signal(SIGSTOP, SIG_IGN);
     signal(SIGCONT, SIG_IGN);
 
-    // Tempo base do escalonador
     time_t start_time_global = time(NULL);
 
     // Lendo o arquivo de entrada
@@ -69,6 +70,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
         process.pid = -1;
         process.status = READY;
         process.start_time_original = process.start_time;
+        process.execution_time = 0;
         printf("Processo %d - Executável: %s, Início: %d, Prioridade: %d\n",
                process.id, process.executable, process.start_time, process.priority);
         add_process(scheduler, &process);
@@ -80,7 +82,8 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
 
     while (running)
     {
-        running = 0;
+        running = 0;                 // Assume que todos os processos terminaram
+        int next_start_time = 10000; // Próximo tempo de início dos processos
 
         for (int priority = 0; priority < MAX_PRIORITY; priority++)
         {
@@ -90,25 +93,39 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
             {
                 Process *process = &queue->processes[i];
 
-                if (process->status == FINISHED)
-                    continue;
+                if (process->status != FINISHED)
+                {
+                    running = 1;
+                }
 
+                // Gerenciar tempo de início
                 if (process->start_time > 0)
                 {
-                    printf("Processo %d aguardando início (restante: %d s)\n",
-                           process->id, process->start_time);
-                    sleep(1);
-                    process->start_time--;
+                    if (process->start_time < next_start_time)
+                    {
+                        next_start_time = process->start_time;
+                    }
                     continue;
                 }
 
-                if (process->status == READY && process->start_time == 0)
+                // Iniciar o processo
+                if (process->status == READY)
                 {
-                    execute_process(process);
-                    process->status = RUNNING;
-                    printf("Processo %d iniciado: PID %d\n", process->id, process->pid);
+                    if (sem_trywait(&scheduler->available_cores) == 0)
+                    {
+                        printf("Semáforo obtido para Processo %d\n", process->id);
+                        execute_process(process);
+                        process->status = RUNNING;
+                        printf("Processo %d iniciado: PID %d\n", process->id, process->pid);
+                    }
+                    else
+                    {
+                        // Semáforo não disponível, verificar outros processos
+                        continue;
+                    }
                 }
 
+                // Retomar ou verificar um processo em execução
                 if (process->status == RUNNING || process->status == SUSPENDED)
                 {
                     printf("Enviando SIGCONT para Processo %d (PID %d)\n", process->id, process->pid);
@@ -116,19 +133,54 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                     sleep(scheduler->quantum);
 
                     int status;
-                    if (waitpid(process->pid, &status, WNOHANG) == process->pid)
+                    pid_t result = waitpid(process->pid, &status, WNOHANG);
+
+                    if (result > 0)
                     {
-                        printf("Processo %d concluído.\n", process->id);
+                        if (WIFEXITED(status))
+                        {
+                            printf("Processo %d finalizou normalmente.\n", process->id);
+                        }
+                        else
+                        {
+                            printf("Processo %d terminou com erro ou sinal.\n", process->id);
+                        }
                         process->status = FINISHED;
                         close(process->pipe_fd[0]);
-                        process->end_time = time(NULL);
+                        process->end_time = time(NULL);                                                     // Registra o término da execução
+                        process->execution_time = (int)(process->end_time - process->start_execution_time); // Calcula o tempo total de execução
+                        sem_post(&scheduler->available_cores);                                              // Libera o núcleo
+                        printf("Semáforo liberado para Processo %d\n", process->id);
+                    }
+                    else if (result == 0)
+                    {
+                        printf("Enviando SIGSTOP para Processo %d (PID %d)\n", process->id, process->pid);
+                        process->status = SUSPENDED;
                     }
                     else
                     {
-                        printf("Enviando SIGSTOP para Processo %d (PID %d)\n", process->id, process->pid);
-                        kill(process->pid, SIGSTOP);
-                        process->status = SUSPENDED;
-                        running = 1;
+                        perror("Erro no waitpid");
+                        process->status = FINISHED;            // Marca como finalizado em caso de erro
+                        sem_post(&scheduler->available_cores); // Libera o núcleo
+                    }
+                }
+            }
+        }
+
+        if (running && next_start_time > 0 && next_start_time != 10000)
+        {
+            printf("Aguardando %d segundos para o próximo processo.\n", next_start_time);
+            sleep(next_start_time);
+
+            // Atualiza os tempos de início
+            for (int priority = 0; priority < MAX_PRIORITY; priority++)
+            {
+                PriorityQueue *queue = &scheduler->queues[priority];
+                for (int i = 0; i < queue->count; i++)
+                {
+                    if (queue->processes[i].start_time > 0)
+                    {
+                        queue->processes[i].start_time -= next_start_time;
                     }
                 }
             }
@@ -151,7 +203,8 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
             if (process->status == FINISHED)
             {
                 int turnaround = (int)(process->end_time - start_time_global - process->start_time_original);
-                printf("Processo %d: Turnaround = %d segundos\n", process->id, turnaround);
+                printf("Processo %d: Turnaround = %d segundos, Tempo de Execução = %d segundos\n",
+                       process->id, turnaround, process->execution_time);
                 total_turnaround += turnaround;
                 total_processes++;
             }
@@ -163,4 +216,6 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
         printf("Tempo médio de turnaround: %.2f segundos\n",
                (float)total_turnaround / total_processes);
     }
+
+    sem_destroy(&scheduler->available_cores); // Destroi o semáforo
 }
