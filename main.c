@@ -2,7 +2,7 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc != 4) // Agora espera 3 argumentos: quantum, arquivo e número de cores
+    if (argc != 4)
     {
         fprintf(stderr, "Uso: %s <numero_de_cores> <quantum> <arquivo_entrada>\n", argv[0]);
         return EXIT_FAILURE;
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     }
 
     Scheduler scheduler;
-    init_scheduler(&scheduler, quantum, num_cores); // Agora inclui o número de cores
+    init_scheduler(&scheduler, quantum, num_cores);
 
     execute_scheduler(&scheduler, input_file);
 

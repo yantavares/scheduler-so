@@ -26,16 +26,16 @@ typedef struct Process
 {
     int id;
     char executable[256];
-    int start_time;          // Tempo de início relativo
-    int start_time_original; // Tempo original de início
+    int start_time;
+    int start_time_original;
     int priority;
-    int execution_time; // Tempo total de execução
+    int execution_time;
     pid_t pid;
     int pipe_fd[2];
     ProcessStatus status;
-    time_t start_execution_time; // Tempo em que a execução começou
-    time_t last_resume_time;     // Último tempo em que o processo foi retomado
-    time_t end_time;             // Tempo em que o processo terminou
+    time_t start_execution_time;
+    time_t last_resume_time;
+    time_t end_time;
 } Process;
 
 typedef struct
