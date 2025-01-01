@@ -3,8 +3,11 @@
 
 int main()
 {
-    for (long i = 0; i < 600000000; i++)
-        ; // Simula 10 segundos
-    printf("Processo teste10 concluído.\n");
+    for (int i = 0; i < 5; i++)
+    {
+        printf("Teste10 progresso: %d/5\n", i + 1);
+        fflush(stdout);
+        sleep(2); // Simula trabalho
+    }
     return 0;
 }

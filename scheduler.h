@@ -8,9 +8,18 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <time.h>
 
 #define MAX_PROCESSES 100
 #define MAX_PRIORITY 4
+
+typedef enum
+{
+    READY,
+    RUNNING,
+    SUSPENDED,
+    FINISHED
+} ProcessStatus;
 
 typedef struct
 {
@@ -19,6 +28,10 @@ typedef struct
     int start_time;
     int priority;
     pid_t pid;
+    int pipe_fd[2];
+    ProcessStatus status;
+    time_t start_time_original; // Tempo de início original
+    time_t end_time;            // Tempo de término
 } Process;
 
 typedef struct
@@ -35,7 +48,7 @@ typedef struct
 
 // Funções do escalonador
 void init_scheduler(Scheduler *scheduler, int quantum);
-void add_process(Scheduler *scheduler, Process process);
+void add_process(Scheduler *scheduler, Process *process);
 void execute_scheduler(Scheduler *scheduler, const char *input_file);
 void execute_process(Process *process);
 
