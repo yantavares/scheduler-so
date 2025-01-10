@@ -20,6 +20,8 @@ int has_any_process_arrived(Scheduler *scheduler, time_t current_time)
             Process *process = &queue->processes[i];
             if (process->start_time > (int)(current_time))
             {
+                printf("Processo %d ainda não chegou.\n", process->id);
+                printf("Tempo atual: %ld\n", current_time);
                 continue;
             }
             else if (process->status == NOT_HERE)
@@ -127,6 +129,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
             for (int i = 0; i < original_count; i++)
             {
                 print_priority_queue(queue);
+                current_time = time(NULL);
 
                 int arrived_priority = has_any_process_arrived(scheduler, current_time - start_time_global);
                 if (arrived_priority != -1)
@@ -139,16 +142,6 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                 }
 
                 Process *process = &queue->processes[i];
-
-                if (process->start_time > (int)(current_time - start_time_global))
-                {
-                    continue;
-                }
-                else if (process->status == NOT_HERE)
-                {
-                    process->status = READY;
-                    printf("Processo %d chegou.\n", process->id);
-                }
 
                 if (process->status == FINISHED)
                 {
@@ -192,7 +185,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                             process->status = FINISHED;
                             close(process->pipe_fd[0]);
                             process->end_time = time(NULL);
-                            process->execution_time = (int)(process->end_time - process->start_execution_time);
+                            process->execution_time = (int)(time(NULL) - process->start_execution_time);
                             sem_post(&scheduler->available_cores);
                             printf("Semáforo liberado pelo Processo %d\n", process->id);
                         }
@@ -210,7 +203,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                             queue->processes[j] = queue->processes[j + 1];
                         }
                         queue->processes[queue->count - 1] = temp;
-                        i--; // Ajustar o índice para refletir a mudança
+                        i = -1; // Ajustar o índice para refletir a mudança
 
                         sem_post(&scheduler->available_cores); // Libera o semáforo
                     }
