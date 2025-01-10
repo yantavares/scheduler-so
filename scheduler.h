@@ -37,6 +37,7 @@ typedef struct Process
     time_t start_execution_time;
     time_t last_resume_time;
     time_t end_time;
+    int last_execution_start;
 } Process;
 
 typedef struct

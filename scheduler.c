@@ -1,5 +1,38 @@
 #include "scheduler.h"
 
+void print_priority_queue(PriorityQueue *queue)
+{
+    for (int i = 0; i < queue->count; i++)
+    {
+        Process *process = &queue->processes[i];
+        printf("p%d ", process->id);
+    }
+    printf("\n");
+}
+
+int has_any_process_arrived(Scheduler *scheduler, time_t current_time)
+{
+    for (int priority = 0; priority < MAX_PRIORITY; priority++)
+    {
+        PriorityQueue *queue = &scheduler->queues[priority];
+        for (int i = 0; i < queue->count; i++)
+        {
+            Process *process = &queue->processes[i];
+            if (process->start_time > (int)(current_time))
+            {
+                continue;
+            }
+            else if (process->status == NOT_HERE)
+            {
+                process->status = READY;
+                printf("Processo %d chegou.\n", process->id);
+                return process->priority;
+            }
+        }
+    }
+    return -1;
+}
+
 // Inicializa o escalonador
 void init_scheduler(Scheduler *scheduler, int quantum, int num_cores)
 {
@@ -93,6 +126,18 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
 
             for (int i = 0; i < original_count; i++)
             {
+                print_priority_queue(queue);
+
+                int arrived_priority = has_any_process_arrived(scheduler, current_time - start_time_global);
+                if (arrived_priority != -1)
+                {
+                    if (priority >= arrived_priority)
+                    {
+                        priority = arrived_priority - 1;
+                        break;
+                    }
+                }
+
                 Process *process = &queue->processes[i];
 
                 if (process->start_time > (int)(current_time - start_time_global))
@@ -167,7 +212,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                         queue->processes[queue->count - 1] = temp;
                         i--; // Ajustar o índice para refletir a mudança
 
-                        sem_post(&scheduler->available_cores);
+                        sem_post(&scheduler->available_cores); // Libera o semáforo
                     }
                 }
             }
