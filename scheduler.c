@@ -106,6 +106,11 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                 {
                     continue;
                 }
+                else if (process->arrived == 0)
+                {
+                    process->arrived = 1;
+                    printf("Processo %d chegou.\n", process->id);
+                }
 
                 // Iniciar o processo
                 if (process->status == READY)
