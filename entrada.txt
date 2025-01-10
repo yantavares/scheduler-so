@@ -2,4 +2,4 @@
 2 ./procs/teste10 0 0 
 3 ./procs/teste30 20 0 
 4 ./procs/teste10 15 1
-5 ./procs/teste10 0 0
+5 ./procs/teste30 0 0
