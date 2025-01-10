@@ -16,6 +16,7 @@
 
 typedef enum
 {
+    NOT_HERE,
     READY,
     RUNNING,
     SUSPENDED,
@@ -36,7 +37,6 @@ typedef struct Process
     time_t start_execution_time;
     time_t last_resume_time;
     time_t end_time;
-    int arrived;
 } Process;
 
 typedef struct
