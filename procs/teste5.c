@@ -3,19 +3,24 @@
 
 int main()
 {
-    // Obtém o tempo inicial
-    time_t start_time = time(NULL);
+    long long i;         // Variável para o loop
+    clock_t inicio, fim; // Variáveis para medir o tempo
 
-    // Loop até atingir 5 segundos
-    while (time(NULL) - start_time < 5)
-    {
-        // Um loop vazio que consome tempo
-        for (volatile long i = 0; i < 500000; i++)
-        {
-            // Adiciona volatilidade para evitar otimizações do compilador
-        }
-    }
+    inicio = clock();
 
-    printf("Programa finalizado após 5 segundos.\n");
+    // Loop com número grande de iterações
+    for (i = 0; i < 20000000000LL; i++)
+        ;
+
+    // Marcar o fim do timer
+    fim = clock();
+
+    // Calcular o tempo total em segundos
+    double tempo_total = (double)(fim - inicio) / CLOCKS_PER_SEC;
+
+    // Exibir resultados
+    printf("Loop finalizado. Número total de iterações: %lld\n", i);
+    printf("Tempo total do loop: %.2f segundos\n", tempo_total);
+
     return 0;
 }
