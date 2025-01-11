@@ -1,5 +1,5 @@
 1 ./procs/teste2 0 2 
-2 ./procs/teste20 0 0 
-3 ./procs/teste5 8 0 
+2 ./procs/teste2 0 0 
+3 ./procs/teste5 0 0 
 4 ./procs/teste2 0 1
 5 ./procs/teste5 0 0
