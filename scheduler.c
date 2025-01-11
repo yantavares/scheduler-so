@@ -74,7 +74,9 @@ void execute_process(Process *process, int quantum, int pipe_fd)
         perror("Erro no fork");
         exit(EXIT_FAILURE);
     }
-    process->start_execution_time = time(NULL);
+
+    process->last_execution_start = time(NULL);
+    process->status = RUNNING;
 }
 
 void read_pipe_and_update_status(int pipe_fd)
@@ -120,6 +122,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
         process.status = NOT_HERE;
         process.start_time_original = process.start_time;
         process.execution_time = 0;
+        process.last_execution_start = 0;
         printf("Processo %d - Executável: %s, Início: %d, Prioridade: %d\n",
                process.id, process.executable, process.start_time, process.priority);
         add_process(scheduler, &process);
@@ -170,7 +173,6 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                     {
                         printf("Semáforo obtido para Processo %d\n", process->id);
                         execute_process(process, scheduler->quantum, pipe_fd[1]);
-                        process->status = RUNNING;
                         printf("Processo %d iniciado: PID %d\n", process->id, process->pid);
                     }
                     else
@@ -189,6 +191,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                             printf("Semáforo não disponível para Processo %d\n", process->id);
                             continue;
                         }
+                        process->last_execution_start = time(NULL);
                     }
 
                     printf("Enviando SIGCONT para Processo %d (PID %d)\n", process->id, process->pid);
@@ -206,10 +209,10 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                         {
                             if (WIFEXITED(status))
                             {
+                                process->execution_time += (int)(time(NULL) - process->last_execution_start);
                                 printf("Processo %d finalizou normalmente.\n", process->id);
                                 process->status = FINISHED;
                                 process->end_time = time(NULL);
-                                process->execution_time = (int)(time(NULL) - process->start_execution_time);
                                 sem_post(&scheduler->available_cores);
                                 printf("Semáforo liberado pelo Processo %d\n", process->id);
                                 process_finished = 1;
@@ -224,6 +227,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                     if (!process_finished)
                     {
                         printf("Enviando SIGSTOP para Processo %d (PID %d)\n", process->id, process->pid);
+                        process->execution_time += (int)(time(NULL) - process->last_execution_start);
                         kill(process->pid, SIGSTOP);
                         process->status = SUSPENDED;
 
