@@ -24,6 +24,7 @@ int has_any_process_arrived(Scheduler *scheduler, time_t current_time)
             }
             else if (process->status == NOT_HERE)
             {
+                printf("Processo %d chegou.\n", process->id);
                 process->status = READY;
                 return process->priority;
             }
