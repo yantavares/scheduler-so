@@ -29,7 +29,7 @@ Isso irá compilar o programa e gerar o executável `escalona`, além de compila
 
 
    ```bash
-   gcc -o escalona scheduler.c -lpthread
+   gcc -o escalona scheduler.c
    ```
 
 ## Execução
