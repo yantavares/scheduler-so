@@ -10,7 +10,7 @@
 
 ```
 
-Este programa implementa um escalonador que gerencia processos em um ambiente Unix, utilizando até 4 filas de prioridade (0, 1, 2, 3) e um quantum específico. Ele simula um ambiente multicore, escalonando processos de acordo com suas prioridades e tempos de início.
+Este programa implementa um escalonador que gerencia processos em um ambiente Unix pela política Round Robin, utilizando até 4 filas de prioridade (0, 1, 2, 3) e um quantum específico. Ele simula um ambiente multicore, escalonando processos de acordo com suas prioridades e tempos de início.
 
 ---
 
