@@ -6,10 +6,10 @@
  * * Guilherme Soares
  * * Gustavo Valentim
  * * Gabriel Farago
- * 
+ *
  * Versão do Compilador: GCC 14.2.1
  * Sistema Operacional: Arch Linux x86_64
- * Kernel: 6.12.8-arch1-1 
+ * Kernel: 6.12.8-arch1-1
  * ------------------------------------------------------ */
 
 /**
@@ -203,9 +203,16 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
             PriorityQueue *queue = &scheduler->queues[priority];
             int original_count = queue->count;
 
+            int restart_flag = 0;
             for (int i = 0; i < original_count; i++)
             {
-                has_any_process_arrived(scheduler, time(NULL) - start_time_global);
+                print_priority_queue(queue);
+                int arrived = has_any_process_arrived(scheduler, time(NULL) - start_time_global);
+                if (arrived != -1)
+                {
+                    priority = -1;
+                    restart_flag = 1;
+                }
 
                 Process *process = &queue->processes[i];
 
@@ -270,7 +277,12 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
 
                         read_pipe_and_update_status(pipe_fd[0]);
 
-                        has_any_process_arrived(scheduler, time(NULL) - start_time_global);
+                        int arrived = has_any_process_arrived(scheduler, time(NULL) - start_time_global);
+                        if (arrived != -1)
+                        {
+                            priority = -1;
+                            restart_flag = 1;
+                        }
                     }
 
                     if (!process_finished)
@@ -290,6 +302,10 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
 
                         sem_post(&scheduler->available_cores);
                     }
+                }
+                if (restart_flag)
+                {
+                    break;
                 }
             }
         }
