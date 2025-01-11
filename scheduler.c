@@ -206,7 +206,6 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
             int restart_flag = 0;
             for (int i = 0; i < original_count; i++)
             {
-                print_priority_queue(queue);
                 int arrived = has_any_process_arrived(scheduler, time(NULL) - start_time_global);
                 if (arrived != -1)
                 {
@@ -280,7 +279,10 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                         int arrived = has_any_process_arrived(scheduler, time(NULL) - start_time_global);
                         if (arrived != -1)
                         {
-                            priority = -1;
+                            if (arrived < process->priority)
+                            {
+                                priority = arrived - 1;
+                            }
                             restart_flag = 1;
                         }
                     }
