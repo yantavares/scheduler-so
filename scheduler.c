@@ -125,10 +125,9 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
             for (int i = 0; i < original_count; i++)
             {
                 print_priority_queue(queue);
-                current_time = time(NULL);
 
                 // Atualiza status de processos que chegaram
-                has_any_process_arrived(scheduler, current_time - start_time_global);
+                has_any_process_arrived(scheduler, time(NULL) - start_time_global);
 
                 Process *process = &queue->processes[i];
 
@@ -159,6 +158,16 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                 // Executar ou retomar o processo
                 if (process->status == RUNNING || process->status == SUSPENDED)
                 {
+                    if (process->status == SUSPENDED)
+                    {
+                        // Pega semáforo para retomar o processo
+                        if (sem_trywait(&scheduler->available_cores) != 0)
+                        {
+                            printf("Semáforo não disponível para Processo %d\n", process->id);
+                            continue;
+                        }
+                    }
+
                     printf("Enviando SIGCONT para Processo %d (PID %d)\n", process->id, process->pid);
                     kill(process->pid, SIGCONT);
 
