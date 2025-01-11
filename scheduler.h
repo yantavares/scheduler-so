@@ -10,6 +10,8 @@
 #include <signal.h>
 #include <time.h>
 #include <semaphore.h>
+#include <errno.h>
+#include <fcntl.h>
 
 #define MAX_PROCESSES 100
 #define MAX_PRIORITY 4
@@ -56,6 +58,6 @@ typedef struct
 void init_scheduler(Scheduler *scheduler, int quantum, int num_cores);
 void add_process(Scheduler *scheduler, Process *process);
 void execute_scheduler(Scheduler *scheduler, const char *input_file);
-void execute_process(Process *process);
+void execute_process(Process *process, int quantum, int pipe_fd);
 
 #endif
