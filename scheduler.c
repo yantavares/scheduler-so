@@ -205,8 +205,6 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
 
             for (int i = 0; i < original_count; i++)
             {
-                print_priority_queue(queue);
-
                 has_any_process_arrived(scheduler, time(NULL) - start_time_global);
 
                 Process *process = &queue->processes[i];

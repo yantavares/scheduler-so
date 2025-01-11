@@ -1,2 +1,4 @@
-1 ./procs/teste5 0 0
-2 ./procs/teste5 0 0 
+1 process/teste20 0 2 
+2 process/teste10 0 0 
+3 process/teste30 20 0 
+4 process/teste10 15 1 
