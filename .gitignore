@@ -1,3 +1,4 @@
 escalona
 process/*
 !process/*.c
+.vscode/
