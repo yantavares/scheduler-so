@@ -1,0 +1,3 @@
+escalona
+process/*
+!process/*.c
