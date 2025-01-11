@@ -1,5 +1,22 @@
 #include "scheduler.h"
 
+/**---------------------------------------------------------
+ * Autores:
+ * * Yan Tavares - 202014323
+ * * Guilherme Soares
+ * * Gustavo Valentim
+ * * Gabriel Farago
+ * 
+ * Versão do Compilador: GCC 14.2.1
+ * Sistema Operacional: Arch Linux x86_64
+ * Kernel: 6.12.8-arch1-1 
+ * ------------------------------------------------------ */
+
+/**
+ * @brief Imprime os IDs dos processos na fila de prioridade.
+ *
+ * @param queue Ponteiro para a fila de prioridade.
+ */
 void print_priority_queue(PriorityQueue *queue)
 {
     for (int i = 0; i < queue->count; i++)
@@ -10,6 +27,13 @@ void print_priority_queue(PriorityQueue *queue)
     printf("\n");
 }
 
+/**
+ * @brief Verifica se algum processo já chegou na fila e atualiza seu status.
+ *
+ * @param scheduler Ponteiro para o escalonador.
+ * @param current_time Tempo atual.
+ * @return Retorna a prioridade do primeiro processo que chegou ou -1 se nenhum chegou.
+ */
 int has_any_process_arrived(Scheduler *scheduler, time_t current_time)
 {
     for (int priority = 0; priority < MAX_PRIORITY; priority++)
@@ -33,7 +57,13 @@ int has_any_process_arrived(Scheduler *scheduler, time_t current_time)
     return -1;
 }
 
-// Inicializa o escalonador
+/**
+ * @brief Inicializa o escalonador com os valores iniciais.
+ *
+ * @param scheduler Ponteiro para o escalonador.
+ * @param quantum Quantum de tempo para cada processo.
+ * @param num_cores Número de núcleos disponíveis.
+ */
 void init_scheduler(Scheduler *scheduler, int quantum, int num_cores)
 {
     scheduler->quantum = quantum;
@@ -44,22 +74,33 @@ void init_scheduler(Scheduler *scheduler, int quantum, int num_cores)
     sem_init(&scheduler->available_cores, 0, num_cores);
 }
 
-// Adiciona um processo à fila de prioridade correspondente
+/**
+ * @brief Adiciona um processo à fila de prioridade correspondente no escalonador.
+ *
+ * @param scheduler Ponteiro para o escalonador.
+ * @param process Ponteiro para o processo que será adicionado.
+ */
 void add_process(Scheduler *scheduler, Process *process)
 {
     PriorityQueue *queue = &scheduler->queues[process->priority];
     queue->processes[queue->count++] = *process;
 }
 
-// Executa um processo e configura o pipe para comunicação
+/**
+ * @brief Executa um processo criando um novo processo filho e redireciona a saída para o pipe.
+ *
+ * @param process Ponteiro para o processo a ser executado.
+ * @param quantum Quantum de tempo alocado para o processo.
+ * @param pipe_fd Descritor do pipe para comunicação entre processos.
+ */
 void execute_process(Process *process, int quantum, int pipe_fd)
 {
     pid_t pid = fork();
 
-    if (pid == 0) // Processo filho
+    if (pid == 0)
     {
-        close(pipe_fd);               // Fecha a escrita no pipe no pai
-        dup2(pipe_fd, STDOUT_FILENO); // Redireciona stdout para o pipe
+        close(pipe_fd);
+        dup2(pipe_fd, STDOUT_FILENO);
 
         execl(process->executable, process->executable, NULL);
         perror("Erro ao executar o arquivo");
@@ -79,6 +120,11 @@ void execute_process(Process *process, int quantum, int pipe_fd)
     process->status = RUNNING;
 }
 
+/**
+ * @brief Lê mensagens do pipe e imprime no console. Atualiza status de processos conforme necessário.
+ *
+ * @param pipe_fd Descritor do pipe.
+ */
 void read_pipe_and_update_status(int pipe_fd)
 {
     char buffer[256];
@@ -96,6 +142,12 @@ void read_pipe_and_update_status(int pipe_fd)
     }
 }
 
+/**
+ * @brief Executa o escalonador lendo processos do arquivo de entrada e gerenciando a execução.
+ *
+ * @param scheduler Ponteiro para o escalonador.
+ * @param input_file Nome do arquivo de entrada contendo os processos.
+ */
 void execute_scheduler(Scheduler *scheduler, const char *input_file)
 {
     signal(SIGSTOP, SIG_IGN);
@@ -103,7 +155,6 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
 
     time_t start_time_global = time(NULL);
 
-    // Lendo o arquivo de entrada
     FILE *file = fopen(input_file, "r");
     if (!file)
     {
@@ -138,7 +189,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
         exit(EXIT_FAILURE);
     }
 
-    fcntl(pipe_fd[0], F_SETFL, O_NONBLOCK); // Configura o pipe como não bloqueante
+    fcntl(pipe_fd[0], F_SETFL, O_NONBLOCK);
 
     int running = 1;
 
@@ -219,7 +270,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                             }
                         }
 
-                        read_pipe_and_update_status(pipe_fd[0]); // Lê do pipe enquanto monitora
+                        read_pipe_and_update_status(pipe_fd[0]);
 
                         has_any_process_arrived(scheduler, time(NULL) - start_time_global);
                     }
