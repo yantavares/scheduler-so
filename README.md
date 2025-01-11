@@ -1,4 +1,4 @@
-# Escalonador Multicore de Prioridades Estáticas Unix
+# Escalonador de Prioridades Estáticas Unix
 
 ```
                             _____  .__ ___.                                                              
