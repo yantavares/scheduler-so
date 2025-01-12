@@ -1,6 +1,6 @@
 # Unix Static Priority Multicore Scheduler
 
-:brazil: **PT/BR** -> [README_ptbr.md](README_ptbr.md)
+:brazil: **PT/BR** - [README_ptbr.md](README_ptbr.md)
 
 [![GitHub stars](https://img.shields.io/github/stars/yantavares/scheduler-so)](https://github.com/yantavares/scheduler-so)
 [![License: GPLv3](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
