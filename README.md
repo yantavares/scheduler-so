@@ -1,88 +1,95 @@
-# Escalonador de Prioridades Estáticas Unix
+# Unix Static Priority Multicore Scheduler
+
+:brazil: **PT/BR** -> [README_ptbr.md](README_ptbr.md)
+
+[![GitHub stars](https://img.shields.io/github/stars/yantavares/scheduler-so)](https://github.com/yantavares/scheduler-so)
+[![License: GPLv3](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ```
-                            _____  .__ ___.                                                              
-  __________               /  _  \ |  |\_ |__ _____                                                      
- /  ___/  _ \    ______   /  /_\  \|  | | __ \\__  \                                                     
- \___ (  <_> )  /_____/  /    |    \  |_| \_\ \/ __ \_                                                   
-/____  >____/            \____|__  /____/___  (____  /                                                   
-     \/                          \/         \/     \/                                                    
+                            _____  .__ ___.
+  __________               /  _  \ |  |\_ |__ _____
+ /  ___/  _ \    ______   /  /_\  \|  | | __ \\__  \
+ \___ (  <_> )  /_____/  /    |    \  |_| \_\ \/ __ \_
+/____  >____/            \____|__  /____/___  (____  /
+     \/                          \/         \/     \/
 
 ```
 
-Este programa implementa um escalonador que gerencia processos em um ambiente Unix pela política Round Robin, utilizando até 4 filas de prioridade (0, 1, 2, 3) e um quantum específico. Ele simula um ambiente multicore, escalonando processos de acordo com suas prioridades e tempos de início.
+**Note:** If this repository helped you, please leave a :star: on the repo :)
+
+This program implements a scheduler that manages processes in a Unix environment using the Round Robin policy with up to 4 priority queues (0, 1, 2, 3) and a specific quantum. It simulates a multicore environment, scheduling processes based on their priorities and start times.
 
 ---
 
-## Compilação
+## Compilation
 
-### Opção 1: Utilizando o Makefile
+### Option 1: Using the Makefile
 
+```bash
+make
+```
 
-   ```bash
-   make
-   ```
+This will compile the program and generate the `escalona` executable, along with compiling all test processes in the `process` directory.
 
-Isso irá compilar o programa e gerar o executável `escalona`, além de compilar todos os processos de teste dentro do diretório `procsess`.
+### Option 2: Manual Compilation
 
-### Opção 2: Compilação Manual
+```bash
+gcc -o escalona scheduler.c -lpthread
+```
 
+## Execution
 
-   ```bash
-   gcc -o escalona scheduler.c
-   ```
+```bash
+./escalona <number_of_cores> <quantum> <input_file>
+```
 
-## Execução
+Example:
 
-   ```bash
-   ./escalona <numero_de_cores> <quantum> <arquivo_de_entrada>
-   ```
+```bash
+./escalona 4 2 input.txt
+```
 
-   Exemplo:
+Two test input files are already available in the scheduler's directory.
 
-   ```bash
-   ./escalona 4 2 entrada.txt
-   ```
-Dois arquivos de entrada de teste já estão disponíveis no mesmo diretório do escalonador.
+### **Input File Format:**
 
-3. **Formato do Arquivo de Entrada:**
-   O arquivo de entrada deve seguir o formato:
+The input file must follow the format:
 
-   ```
-   <id> <executable> <start_time> <priority>
-   ```
+```
+<id> <executable> <start_time> <priority>
+```
 
-   Exemplo:
+Example:
 
-   ```
-   1 teste20 0 2
-   2 teste10 0 0
-   3 teste30 20 0
-   4 teste10 15 1
-   ```
-
----
-
-## Funcionalidades
-
-- Gerencia processos em 4 filas de prioridade.
-- Suporte a round-robin para cada fila.
-- Utiliza semáforos para gerenciar o acesso aos cores.
-- Monitora processos via pipes para comunicação interprocessos.
-- Gera um relatório final com tempo de turnaround e execução de cada processo.
+```
+1 test20 0 2
+2 test10 0 0
+3 test30 20 0
+4 test10 15 1
+```
 
 ---
 
-### Relatório Final
+## Features
 
-O programa imprime:
-
-- Ordem de execução dos processos.
-- Tempo de turnaround de cada processo.
-- Tempo médio de turnaround.
+- Manages processes in 4 priority queues.
+- Supports round-robin for each queue.
+- Uses semaphores to manage core access.
+- Monitors processes via pipes for interprocess communication.
+- Generates a final report with turnaround time and execution details for each process.
 
 ---
 
-## Observações
+### Final Report
 
-- Ainda não foi possível implementar a funcionalidade de múltiplos cores. A lógica de escalonamento está implementada, mas a execução paralela ainda não. (Em desenvolvimento)
+The program outputs:
+
+- Execution order of the processes.
+- Turnaround time for each process.
+- Average turnaround time.
+
+---
+
+## Notes
+
+- The functionality for multiple cores is not yet implemented. The scheduling logic is in place, but parallel execution is still under development. (Work in progress)
