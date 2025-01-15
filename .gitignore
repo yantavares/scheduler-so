@@ -2,3 +2,4 @@ escalona
 process/*
 !process/*.c
 .vscode/
+*.pdf
