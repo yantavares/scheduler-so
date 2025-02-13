@@ -99,8 +99,8 @@ void execute_process(Process *process, int quantum, int pipe_fd)
 
     if (pid == 0)
     {
-        close(pipe_fd);
         dup2(pipe_fd, STDOUT_FILENO);
+        close(pipe_fd);
 
         execl(process->executable, process->executable, NULL);
         perror("Erro ao executar o arquivo");
