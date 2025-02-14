@@ -279,10 +279,7 @@ void execute_scheduler(Scheduler *scheduler, const char *input_file)
                         int arrived = has_any_process_arrived(scheduler, time(NULL) - start_time_global);
                         if (arrived != -1)
                         {
-                            if (arrived < process->priority)
-                            {
-                                priority = arrived - 1;
-                            }
+                            priority = -1;
                             restart_flag = 1;
                         }
                     }
